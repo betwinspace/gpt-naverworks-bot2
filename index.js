@@ -3,6 +3,10 @@ const axios = require("axios");
 const bodyParser = require("body-parser");
 const fs = require("fs");
 
+const app = express(); // ✅ 반드시 최상단에서 정의되어야 함
+app.use(bodyParser.json());
+
+// 💬 GPT 호출 함수
 async function askGPT(question) {
   const manual = fs.readFileSync("manual.txt", "utf-8");
 
@@ -10,7 +14,7 @@ async function askGPT(question) {
     "https://api.openai.com/v1/chat/completions",
     {
       model: "gpt-3.5-turbo",
-      temperature: 0, // 👈 정답 기반 응답만 허용
+      temperature: 0,
       messages: [
         {
           role: "system",
@@ -32,7 +36,6 @@ async function askGPT(question) {
 
   return res.data.choices[0].message.content;
 }
-
 
 // 💬 Naver Works로 메시지 전송
 async function sendToNaverWorks(userId, text, accessToken) {
@@ -69,6 +72,7 @@ app.post("/bot", async (req, res) => {
   }
 });
 
+// ✅ 서버 실행
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`✅ 봇 서버가 포트 ${PORT}에서 실행 중입니다.`);
