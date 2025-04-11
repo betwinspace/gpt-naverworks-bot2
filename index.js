@@ -3,19 +3,23 @@ const axios = require("axios");
 const bodyParser = require("body-parser");
 const fs = require("fs");
 
-const manual = fs.readFileSync("manual.txt", "utf-8");
-
-const app = express();
-app.use(bodyParser.json());
-
 async function askGPT(question) {
+  const manual = fs.readFileSync("manual.txt", "utf-8");
+
   const res = await axios.post(
     "https://api.openai.com/v1/chat/completions",
     {
       model: "gpt-3.5-turbo",
+      temperature: 0, // 👈 정답 기반 응답만 허용
       messages: [
-        { role: "system", content: `다음은 우리 회사의 업무 매뉴얼입니다:\n\n${manual}` },
-        { role: "user", content: question }
+        {
+          role: "system",
+          content: `너는 우리 회사 내부 규정만을 기반으로 대답해야 한다. 아래는 회사의 공식 매뉴얼이다:\n\n${manual}\n\n⚠️ 규정에 없는 정보는 절대 추측하거나 말하지 마라. 모르겠으면 '해당 정보는 규정에 없습니다' 라고 말해.`
+        },
+        {
+          role: "user",
+          content: question
+        }
       ]
     },
     {
@@ -25,8 +29,10 @@ async function askGPT(question) {
       }
     }
   );
+
   return res.data.choices[0].message.content;
 }
+
 
 // 💬 Naver Works로 메시지 전송
 async function sendToNaverWorks(userId, text, accessToken) {
