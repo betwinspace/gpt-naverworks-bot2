@@ -6,7 +6,7 @@ const bodyParser = require("body-parser");
 const fs = require("fs");
 const jwt = require("jsonwebtoken");
 const qs = require("qs");
-require("dotenv").config();
+require("dotenv/config");
 
 const app = express();
 app.use(bodyParser.json());
