@@ -27,7 +27,7 @@ function generateJWT() {
   };
 
   return jwt.sign(payload, privateKey, { algorithm: "RS256" });
-}
+
   console.log("🪙 생성된 JWT 토큰:", token);
 
   return token;
