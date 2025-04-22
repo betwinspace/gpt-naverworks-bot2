@@ -35,11 +35,12 @@ async function askGPT(question) {
   return res.data.choices[0].message.content;
 }
 
-// 📬 메시지 수신 & 응답 (Callback)
+// 📬 Naver Works → GPT 응답 → Naver Works 리턴
 app.post("/bot", async (req, res) => {
   const message = req.body.content?.text || "";
   try {
     const gptReply = await askGPT(message);
+
     return res.json({
       content: {
         type: "text",
