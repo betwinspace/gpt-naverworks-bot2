@@ -1,60 +1,13 @@
-// ✅ GPT + Naver Works 자동 Access Token 재발급 포함 버전
-
 const express = require("express");
 const axios = require("axios");
 const bodyParser = require("body-parser");
 const fs = require("fs");
-const jwt = require("jsonwebtoken");
-const qs = require("qs");
-require("dotenv/config");
+require("dotenv").config();
 
 const app = express();
 app.use(bodyParser.json());
 
-let currentAccessToken = null;
-
-// 🔐 1. JWT 생성 함수
-function generateJWT() {
-  const privateKey = fs.readFileSync("private-key.key");
-  const now = Math.floor(Date.now() / 1000);
-
-  const payload = {
-    iss: process.env.CLIENT_ID,
-    sub: process.env.SERVICE_ACCOUNT,
-    aud: "https://auth.worksmobile.com/oauth2/v2.0/token",
-    iat: now,
-    exp: now + 60 * 10,
-  };
-
-  const token = jwt.sign(payload, privateKey, { algorithm: "RS256" });
-  console.log("🪙 생성된 JWT 토큰:", token);
-  return token;
-}
-
-// 🔐 2. Access Token 발급
-async function fetchAccessToken() {
-  const jwtToken = generateJWT();
-
-  const response = await axios.post(
-    "https://auth.worksmobile.com/oauth2/v2.0/token",
-    qs.stringify({
-      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
-      assertion: jwtToken,
-    }),
-    {
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    }
-  );
-
-  currentAccessToken = response.data.access_token;
-  console.log("✅ Access Token 갱신 완료");
-}
-
-// ⏰ 3. 23시간마다 자동 갱신
-fetchAccessToken();
-setInterval(fetchAccessToken, 1000 * 60 * 60 * 23);
-
-// 🤖 GPT 호출
+// 🤖 GPT 호출 함수
 async function askGPT(question) {
   const manual = fs.readFileSync("manual.txt", "utf-8");
 
@@ -82,37 +35,25 @@ async function askGPT(question) {
   return res.data.choices[0].message.content;
 }
 
-// 💬 Naver Works 메시지 전송
-async function sendToNaverWorks(userId, text) {
-  await axios.post(
-    `https://www.worksapis.com/v1.0/bots/${process.env.BOT_ID}/users/${userId}/messages`,
-    {
-      content: {
-        type: "text",
-        text: text,
-      },
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${currentAccessToken}`,
-        "Content-Type": "application/json",
-      },
-    }
-  );
-}
-
-// 📬 메시지 수신
+// 📬 메시지 수신 & 응답 (Callback)
 app.post("/bot", async (req, res) => {
-  const message = req.body.content.text;
-  const userId = req.body.source.userId;
-
+  const message = req.body.content?.text || "";
   try {
     const gptReply = await askGPT(message);
-    await sendToNaverWorks(userId, gptReply);
-    res.status(200).send("OK");
+    return res.json({
+      content: {
+        type: "text",
+        text: gptReply,
+      },
+    });
   } catch (err) {
-    console.error("에러 발생:", err.response?.data || err.message);
-    res.status(500).send("Error");
+    console.error("GPT 호출 에러:", err.message);
+    return res.json({
+      content: {
+        type: "text",
+        text: "⚠️ 내부 오류로 인해 응답할 수 없습니다.",
+      },
+    });
   }
 });
 
