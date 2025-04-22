@@ -23,15 +23,14 @@ function generateJWT() {
     sub: process.env.SERVICE_ACCOUNT,
     aud: "https://auth.worksmobile.com/oauth2/v2.0/token",
     iat: now,
-    exp: now + 60 * 10, // 10분짜리 JWT
+    exp: now + 60 * 10,
   };
 
-  return jwt.sign(payload, privateKey, { algorithm: "RS256" });
-
+  const token = jwt.sign(payload, privateKey, { algorithm: "RS256" });
   console.log("🪙 생성된 JWT 토큰:", token);
-
   return token;
 }
+
 // 🔐 2. Access Token 발급
 async function fetchAccessToken() {
   const jwtToken = generateJWT();
