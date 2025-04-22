@@ -4,11 +4,11 @@ const bodyParser = require("body-parser");
 const fs = require("fs");
 require("dotenv").config();
 
-const app = express(); // 가장 먼저 선언!
+const app = express(); // ✅ 가장 먼저 선언
 
 app.use(bodyParser.json());
 
-// GPT 호출 함수
+// 🤖 GPT 호출 함수
 async function askGPT(question) {
   const manual = fs.readFileSync("manual.txt", "utf-8");
 
@@ -36,8 +36,10 @@ async function askGPT(question) {
   return res.data.choices[0].message.content;
 }
 
-// 메시지 수신 처리
+// 📬 메시지 수신 & 응답 처리
 app.post("/bot", async (req, res) => {
+  console.log("📨 받은 메시지:", JSON.stringify(req.body)); // ✅ 로그 찍기
+
   const message = req.body.content?.text || "";
   try {
     const gptReply = await askGPT(message);
@@ -58,6 +60,7 @@ app.post("/bot", async (req, res) => {
   }
 });
 
+// 🚀 서버 실행
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`✅ 봇 서버가 포트 ${PORT}에서 실행 중입니다.`);
