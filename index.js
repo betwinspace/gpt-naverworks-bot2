@@ -1,32 +1,14 @@
-app.post("/bot", async (req, res) => {
-  const message = req.body.content?.text || "";
-  try {
-    const gptReply = await askGPT(message);
-    return res.json({
-      content: {
-        type: "text",
-        text: gptReply,
-      },
-    });
-  } catch (err) {
-    console.error("GPT 호출 에러:", err.message);
-    return res.json({
-      content: {
-        type: "text",
-        text: "⚠️ 내부 오류로 인해 응답할 수 없습니다.",
-      },
-    });
-  }
-});const express = require("express");
+const express = require("express");
 const axios = require("axios");
 const bodyParser = require("body-parser");
 const fs = require("fs");
 require("dotenv").config();
 
-const app = express();
+const app = express(); // 가장 먼저 선언!
+
 app.use(bodyParser.json());
 
-// 🤖 GPT 호출 함수
+// GPT 호출 함수
 async function askGPT(question) {
   const manual = fs.readFileSync("manual.txt", "utf-8");
 
@@ -54,33 +36,27 @@ async function askGPT(question) {
   return res.data.choices[0].message.content;
 }
 
-// 📬 Naver Works → GPT 응답 → Naver Works 리턴
+// 메시지 수신 처리
 app.post("/bot", async (req, res) => {
   const message = req.body.content?.text || "";
   try {
     const gptReply = await askGPT(message);
-
     return res.json({
-      outputs: [
-        {
-          type: "text",
-          text: gptReply,
-        },
-      ],
+      content: {
+        type: "text",
+        text: gptReply,
+      },
     });
   } catch (err) {
     console.error("GPT 호출 에러:", err.message);
     return res.json({
-      outputs: [
-        {
-          type: "text",
-          text: "⚠️ 내부 오류로 인해 응답할 수 없습니다.",
-        },
-      ],
+      content: {
+        type: "text",
+        text: "⚠️ 내부 오류로 인해 응답할 수 없습니다.",
+      },
     });
   }
 });
-
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
