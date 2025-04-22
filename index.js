@@ -60,6 +60,11 @@ app.post("/bot", async (req, res) => {
   }
 });
 
+app.get("/health", (req, res) => {
+  res.send("👍 서버 정상 작동 중!");
+});
+
+
 // 🚀 서버 실행
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
