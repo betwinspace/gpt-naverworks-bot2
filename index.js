@@ -1,4 +1,23 @@
-const express = require("express");
+app.post("/bot", async (req, res) => {
+  const message = req.body.content?.text || "";
+  try {
+    const gptReply = await askGPT(message);
+    return res.json({
+      content: {
+        type: "text",
+        text: gptReply,
+      },
+    });
+  } catch (err) {
+    console.error("GPT 호출 에러:", err.message);
+    return res.json({
+      content: {
+        type: "text",
+        text: "⚠️ 내부 오류로 인해 응답할 수 없습니다.",
+      },
+    });
+  }
+});const express = require("express");
 const axios = require("axios");
 const bodyParser = require("body-parser");
 const fs = require("fs");
@@ -40,22 +59,28 @@ app.post("/bot", async (req, res) => {
   const message = req.body.content?.text || "";
   try {
     const gptReply = await askGPT(message);
+
     return res.json({
-      content: {
-        type: "text",
-        text: gptReply,
-      },
+      outputs: [
+        {
+          type: "text",
+          text: gptReply,
+        },
+      ],
     });
   } catch (err) {
     console.error("GPT 호출 에러:", err.message);
     return res.json({
-      content: {
-        type: "text",
-        text: "⚠️ 내부 오류로 인해 응답할 수 없습니다.",
-      },
+      outputs: [
+        {
+          type: "text",
+          text: "⚠️ 내부 오류로 인해 응답할 수 없습니다.",
+        },
+      ],
     });
   }
 });
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
